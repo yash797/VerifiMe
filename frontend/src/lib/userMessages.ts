@@ -19,10 +19,13 @@ export const USER_MESSAGES = {
     `Please select a currency for line ${lineNumber}.`,
   lineAmountRequired: (lineNumber: number) =>
     `Please enter a valid amount greater than zero for line ${lineNumber}.`,
+  serviceUnavailable: "Service unavailable. Please try again.",
   calculationUnavailable:
-    "We couldn't calculate your total right now. Please check your connection and try again.",
+    "Service unavailable. Please try again.",
   currenciesUnavailable:
-    "We couldn't load the list of currencies right now. Please refresh the page or try again shortly.",
+    "Service unavailable. Please try again.",
+  totalRoundsToZero: (currency: string) =>
+    `The total is less than 0.01 ${currency} after conversion and rounding.`,
   calculationFallback:
     "We couldn't complete the calculation. Please try again.",
 } as const;
@@ -54,4 +57,13 @@ export function toUserFriendlyApiError(message: string): string {
 
 export function isNetworkError(error: unknown): boolean {
   return error instanceof TypeError;
+}
+
+export function isServiceUnavailableStatus(status: number): boolean {
+  return status === 502 || status === 503 || status === 504;
+}
+
+export function totalRoundsToZero(total: string): boolean {
+  const value = Number.parseFloat(total);
+  return !Number.isNaN(value) && value === 0;
 }

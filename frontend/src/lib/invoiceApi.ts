@@ -1,6 +1,7 @@
 import type { InvoiceRequest } from "@/types/invoice";
 import {
   isNetworkError,
+  isServiceUnavailableStatus,
   toUserFriendlyApiError,
   USER_MESSAGES,
 } from "@/lib/userMessages";
@@ -28,6 +29,10 @@ export async function calculateInvoiceTotal(
     const body = await response.text();
 
     if (!response.ok) {
+      if (isServiceUnavailableStatus(response.status)) {
+        return { ok: false, message: USER_MESSAGES.serviceUnavailable };
+      }
+
       const rawMessage = body.startsWith("Error: ")
         ? body.slice("Error: ".length)
         : body;
@@ -42,7 +47,7 @@ export async function calculateInvoiceTotal(
     return { ok: true, total: body.trim() };
   } catch (error) {
     if (isNetworkError(error)) {
-      return { ok: false, message: USER_MESSAGES.calculationUnavailable };
+      return { ok: false, message: USER_MESSAGES.serviceUnavailable };
     }
 
     return { ok: false, message: USER_MESSAGES.calculationFallback };

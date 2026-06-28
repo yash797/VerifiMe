@@ -15,7 +15,7 @@ function createEmptyLine(id: string): InvoiceLineFormState {
   return {
     id,
     description: "",
-    currency: "INR",
+    currency: "USD",
     amount: "",
   };
 }
@@ -69,7 +69,7 @@ export default function InvoiceForm() {
   const nextLineIdRef = useRef(2);
   const { currencies, loading: currenciesLoading, error: currenciesError } =
     useCurrencies();
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState("INR");
   const [date, setDate] = useState(todayIsoDate);
   const [lines, setLines] = useState<InvoiceLineFormState[]>(() => [
     createEmptyLine("line-1"),

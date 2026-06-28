@@ -51,7 +51,7 @@ export default function InvoiceLineRow({
         onChange={(event) => onChange(line.id, "amount", event.target.value)}
         required
         slotProps={{
-          htmlInput: { min: 0, step: "0.01" },
+          htmlInput: { min: 0, step: "any" },
         }}
         sx={{ flex: 1, minWidth: 140 }}
       />
