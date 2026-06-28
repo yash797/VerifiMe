@@ -116,7 +116,7 @@ I would containerize the Quarkus backend (JVM or native image) and run it on **A
 - **External dependency:** Frankfurter API handles exchange rate data — no database to provision or maintain
 - **Cost profile:** Pay-per-use Fargate tasks + ALB + Amplify hosting; suitable for variable or moderate traffic without idle server cost
 
-### Infrastructure as Code (Bonus)
+### Infrastructure as Code
 
 I would use **AWS CDK** (TypeScript) or **Terraform** to define:
 
