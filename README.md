@@ -70,70 +70,58 @@ cd backend
 
 ## Deployment Strategy (AWS)
 
-This section describes how I would deploy VerifiMe to a cloud environment. The application is stateless (no database), which simplifies the architecture.
+This application is stateless and does not require a database, making it simple to deploy and scale.
 
-### Frontend Hosting — AWS Amplify (or Vercel)
+### Frontend Hosting
 
-I would host the Next.js frontend on **AWS Amplify Hosting** (or **Vercel** for fastest Next.js integration).
-
-**Why:**
-- Native support for Next.js SSR and static export
-- Built-in CDN (CloudFront when using Amplify)
-- Automatic HTTPS with ACM certificates
-- Git-based CI/CD on every push
-- Low operational overhead for a UI-only tier
-
-The frontend only needs a public URL and an environment variable (`NEXT_PUBLIC_API_URL`) pointing to the backend API.
-
-### Backend Hosting — AWS ECS Fargate + ALB
-
-I would containerize the Quarkus backend (JVM or native image) and run it on **Amazon ECS Fargate** behind an **Application Load Balancer (ALB)**.
+I would host the Next.js frontend on **Vercel** (or AWS Amplify).
 
 **Why:**
-- Quarkus produces efficient container images suitable for Fargate
-- No EC2 server management; pay only for running tasks
-- ALB provides HTTPS termination, health checks, and path-based routing
-- Easy horizontal scaling by increasing task count
-- Fits a small REST API without over-provisioning
+- Easy deployment directly from GitHub
+- Automatic HTTPS
+- Built-in CDN for fast page loading
+- Simple environment variable management
 
-**Alternative:** **AWS App Runner** for even simpler container deployment if traffic is low and advanced networking is not required.
+The frontend would communicate with the backend using the backend API URL configured through an environment variable.
+
+### Backend Hosting
+
+I would deploy the Quarkus backend on an **Amazon EC2** instance.
+
+**Why:**
+- Simple and reliable for hosting a Java application
+- Easy to deploy by running the packaged JAR or a Docker container
+- Can be scaled later if application traffic increases
+
+For production, I would place an **Application Load Balancer (ALB)** in front of the EC2 instance to handle HTTPS requests and route traffic to the application.
 
 ### Security
 
-| Area | Approach |
-|------|----------|
-| **Transport** | HTTPS everywhere via ACM on ALB and Amplify/CloudFront |
-| **API access** | Restrict CORS to the frontend domain only in production |
-| **Network** | Backend tasks in private subnets; ALB in public subnets |
-| **Secrets** | No Frankfurter API key required; use AWS Secrets Manager for any future credentials |
-| **Edge protection** | AWS WAF on ALB to filter common attacks |
-| **Auth (future)** | API Gateway or ALB with Cognito/OAuth if authentication is added later |
+- Use **HTTPS** for all communication.
+- Configure **CORS** so only the frontend can access the backend API.
+- Store any future secrets or credentials securely using **AWS Secrets Manager** instead of hardcoding them.
+- Configure **Security Groups** to allow only the required network traffic.
+
+### Monitoring & Logging
+
+To make it easier to monitor the application in production:
+
+- Use **AppDynamics** to monitor application performance and quickly identify slow or failing requests.
+- Use **Splunk** to collect and search application logs for debugging and root cause analysis.
 
 ### Scalability & Cost
 
-- **Frontend:** Served from CDN; scales automatically with traffic; minimal cost at low volume
-- **Backend:** ECS auto-scaling on CPU or ALB request count; scale to zero is possible with App Runner or scheduled scaling for dev environments
-- **External dependency:** Frankfurter API handles exchange rate data — no database to provision or maintain
-- **Cost profile:** Pay-per-use Fargate tasks + ALB + Amplify hosting; suitable for variable or moderate traffic without idle server cost
+- The frontend is served through a CDN and scales automatically.
+- For this application, a single EC2 instance is enough to handle normal traffic while keeping costs low.
+- If traffic grows, additional EC2 instances can be added behind the Application Load Balancer without changing the application since it is stateless.
 
 ### Infrastructure as Code
 
-I would use **AWS CDK** (TypeScript) or **Terraform** to define:
+I would use **Terraform** or **AWS CDK** to automate the infrastructure setup, including:
 
-- VPC with public/private subnets
-- ECR repository for backend container images
-- ECS cluster, task definition, and Fargate service
-- ALB, target group, and listener rules
-- Amplify app connected to the Git repository
-- IAM roles with least-privilege permissions
-- CloudWatch log groups and alarms
+- EC2 instance
+- Application Load Balancer
+- Security Groups
+- IAM roles
 
-This enables reproducible environments (dev/staging/prod) and reviewable infrastructure changes in pull requests.
-
----
-
-## Evaluation Notes
-
-- Exchange rates from Frankfurter are rounded to **4 decimal places** before calculation
-- Line totals and the final invoice total are rounded to **2 decimal places** (HALF_UP)
-- Error responses are `text/plain` prefixed with `Error:`
+This makes the infrastructure easy to recreate and maintain across different environments.
